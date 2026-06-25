@@ -12,11 +12,9 @@ const normalizeText = (text = "") => {
 
 const getFingerprint = (article) => {
   const title = normalizeText(article.title || "");
-  const description = normalizeText(
-    article.description || article.content || ""
-  );
-  const image = (article.urlToImage || article.image || "").trim().toLowerCase();
-  const source = normalizeText(article.source?.name || article.source || "");
+  const description = normalizeText(article.description || "");
+  const image = (article.image || "").trim().toLowerCase();
+  const source = normalizeText(article.source || "");
   const url = (article.url || "").trim().toLowerCase();
 
   return {
@@ -35,17 +33,18 @@ const isDuplicateArticle = (current, existingList) => {
   return existingList.some((existing) => {
     const existingFp = getFingerprint(existing);
 
-    // same url
     if (currentFp.url && existingFp.url && currentFp.url === existingFp.url) {
       return true;
     }
 
-    // same title
-    if (currentFp.title && existingFp.title && currentFp.title === existingFp.title) {
+    if (
+      currentFp.title &&
+      existingFp.title &&
+      currentFp.title === existingFp.title
+    ) {
       return true;
     }
 
-    // same description
     if (
       currentFp.description &&
       existingFp.description &&
@@ -54,7 +53,6 @@ const isDuplicateArticle = (current, existingList) => {
       return true;
     }
 
-    // same image + same source
     if (
       currentFp.image &&
       existingFp.image &&
@@ -64,25 +62,10 @@ const isDuplicateArticle = (current, existingList) => {
       return true;
     }
 
-    // title overlap + same source
-    if (
-      currentFp.source &&
-      existingFp.source &&
-      currentFp.source === existingFp.source &&
-      currentFp.title &&
-      existingFp.title &&
-      (currentFp.title.includes(existingFp.title) ||
-        existingFp.title.includes(currentFp.title))
-    ) {
-      return true;
-    }
-
-    // title+description overlap
     if (
       currentFp.combinedTitleDesc &&
       existingFp.combinedTitleDesc &&
-      (currentFp.combinedTitleDesc.includes(existingFp.combinedTitleDesc) ||
-        existingFp.combinedTitleDesc.includes(currentFp.combinedTitleDesc))
+      currentFp.combinedTitleDesc === existingFp.combinedTitleDesc
     ) {
       return true;
     }
@@ -100,55 +83,36 @@ const shuffleArray = (array) => {
   return copy;
 };
 
-const categories = [
-  "general",
-  "business",
-  "entertainment",
-  "health",
-  "science",
-  "sports",
-  "technology",
-];
-
 export const fetchTopNews = async () => {
   try {
-    const requests = categories.map((category) =>
-      fetch(
-        `https://newsapi.org/v2/top-headlines?country=us&category=${category}&pageSize=8&apiKey=${NEWS_API_KEY}`
-      ).then((response) => response.json())
+    const response = await fetch(
+      "https://api.currentsapi.services/v1/latest-news?language=en",
+      {
+        headers: {
+          Authorization: NEWS_API_KEY,
+        },
+      }
     );
 
-    const responses = await Promise.all(requests);
+    const data = await response.json();
 
-    let allArticles = [];
+    if (!data.news || !Array.isArray(data.news)) {
+      console.error("Currents API error:", data);
+      return [];
+    }
 
-    responses.forEach((data) => {
-      if (data.status === "ok" && Array.isArray(data.articles)) {
-        allArticles = [...allArticles, ...data.articles];
-      }
-    });
-
-    const cleanedArticles = allArticles
-      .filter((article) => {
-        const title = article.title?.trim();
-        return (
-          title &&
-          title !== "[Removed]" &&
-          title.toLowerCase() !== "removed" &&
-          !title.toLowerCase().includes("[removed]")
-        );
-      })
+    const cleanedArticles = data.news
+      .filter((article) => article.title && article.title.trim() !== "")
       .map((article) => ({
         title: article.title?.trim() || "Untitled News",
         description:
           article.description?.trim() ||
-          article.content?.trim() ||
           "No description available for this news article.",
-        image: article.urlToImage || "",
-        date: article.publishedAt
-          ? new Date(article.publishedAt).toLocaleString()
+        image: article.image || "",
+        date: article.published
+          ? new Date(article.published).toLocaleString()
           : "",
-        source: article.source?.name || "",
+        source: article.author || article.url || "",
         url: article.url || "",
       }));
 
@@ -160,9 +124,7 @@ export const fetchTopNews = async () => {
       }
     }
 
-    const shuffledArticles = shuffleArray(uniqueArticles);
-
-    return shuffledArticles.slice(0, 15);
+    return shuffleArray(uniqueArticles).slice(0, 15);
   } catch (error) {
     console.error("News API error:", error);
     return [];
