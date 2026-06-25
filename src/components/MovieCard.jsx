@@ -6,7 +6,7 @@ const MovieCard = ({ movie, onClick }) => {
 
   return (
     <div
-      onClick={() => onClick(movie)}
+      onClick={onClick}
       style={{
         width: "342px",
         height: "192px",

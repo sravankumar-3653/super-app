@@ -29,8 +29,8 @@ const Categories = () => {
   const navigate = useNavigate();
 
   const user = useStore((state) => state.user);
-  const savedCategories = useStore((state) => state.categories);
-  const setCategories = useStore((state) => state.setCategories);
+  const savedCategories = useStore((state) => state.selectedCategories);
+const setCategories = useStore((state) => state.setCategories);
 
   const [selected, setSelected] = useState(savedCategories || []);
   const [showError, setShowError] = useState(false);
@@ -38,7 +38,7 @@ const Categories = () => {
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
 
   useEffect(() => {
-    if (!user.name || !user.username || !user.email || !user.mobile) {
+    if (!user?.name || !user?.username || !user?.email || !user?.mobile) {
       navigate("/");
     }
   }, [user, navigate]);
@@ -69,6 +69,15 @@ const Categories = () => {
     }
   };
 
+  const handleRemoveCategory = (category) => {
+    const updatedCategories = selected.filter((item) => item !== category);
+    setSelected(updatedCategories);
+
+    if (updatedCategories.length < 3) {
+      setShowError(true);
+    }
+  };
+
   const handleNext = () => {
     if (selected.length < 3) {
       setShowError(true);
@@ -76,7 +85,7 @@ const Categories = () => {
     }
 
     setCategories(selected);
-    navigate("/dashboard");
+navigate("/dashboard");     // go to movies page
   };
 
   return (
@@ -151,7 +160,7 @@ const Categories = () => {
             >
               {item}
               <span
-                onClick={() => handleSelect(item)}
+                onClick={() => handleRemoveCategory(item)}
                 style={{
                   fontWeight: "700",
                   cursor: "pointer",
@@ -197,6 +206,7 @@ const Categories = () => {
             <CategoryCard
               key={category.name}
               image={category.image}
+              title={category.name}
               selected={selected.includes(category.name)}
               onClick={() => handleSelect(category.name)}
             />

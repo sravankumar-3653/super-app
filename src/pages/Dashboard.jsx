@@ -11,7 +11,7 @@ const Dashboard = () => {
   const navigate = useNavigate();
 
   const user = useStore((state) => state.user);
-  const categories = useStore((state) => state.categories);
+ const categories = useStore((state) => state.selectedCategories);
 
   const [isTablet, setIsTablet] = useState(window.innerWidth <= 1100);
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);

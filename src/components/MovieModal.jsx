@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { getMovieDetails } from "../services/movieApi";
+import { fetchMovieDetails } from "../services/movieApi";
 
 const MovieModal = ({ movie, onClose }) => {
   const [movieDetails, setMovieDetails] = useState(null);
@@ -8,14 +8,14 @@ const MovieModal = ({ movie, onClose }) => {
   useEffect(() => {
     if (!movie?.imdbID) return;
 
-    const fetchDetails = async () => {
+    const loadMovieDetails = async () => {
       setLoading(true);
-      const data = await getMovieDetails(movie.imdbID);
+      const data = await fetchMovieDetails(movie.imdbID);
       setMovieDetails(data);
       setLoading(false);
     };
 
-    fetchDetails();
+    loadMovieDetails();
   }, [movie]);
 
   if (!movie) return null;
@@ -150,7 +150,8 @@ const MovieModal = ({ movie, onClose }) => {
                   <strong>Awards:</strong> {details.Awards || "N/A"}
                 </p>
                 <p>
-                  <strong>Plot:</strong> {details.Plot || "No description available."}
+                  <strong>Plot:</strong>{" "}
+                  {details.Plot || "No description available."}
                 </p>
               </div>
             </>

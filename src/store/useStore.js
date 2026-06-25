@@ -23,7 +23,7 @@ const getStoredNotes = () => {
 
 export const useStore = create((set) => ({
   user: getStoredUser(),
-  categories: getStoredCategories(),
+  selectedCategories: getStoredCategories(),
   notes: getStoredNotes(),
 
   setUser: (userData) => {
@@ -33,7 +33,7 @@ export const useStore = create((set) => ({
 
   setCategories: (categories) => {
     localStorage.setItem("super_app_categories", JSON.stringify(categories));
-    set({ categories });
+    set({ selectedCategories: categories });
   },
 
   setNotes: (notes) => {
